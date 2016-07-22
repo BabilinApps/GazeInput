@@ -9,15 +9,34 @@ public class Gaze : VREventSystem {
     [SerializeField]
     float AutoClickTime = 2;
 
+
+    void Start() {
+        if (pointer == null) {
+            if (isVerbose)
+                Debug.Log("Could not finder pointer...");
+
+            pointer = FindObjectOfType<VRPointer>();
+
+            if (isVerbose && pointer != null)
+                Debug.Log("Found pointer automatically.");
+            else if (isVerbose)
+                Debug.Log("Could not find pointer.");
+
+        }
+    }
+
     public override IEnumerator StartSelect(VRInteractable interactiveObject)
     {
 
-        pointer.SetState(VRPointer.State.SELECT);
-        currentInteractable = interactiveObject;
-        UnityPointerSelect(currentInteractable.gameObject);
-        UnityPointerEnter(currentInteractable.gameObject);
-        currentInteractable.AutoClickProgress(GetAutoClickTimeDelta);
-        currentInteractable.PointerEnter();
+
+        if (pointer != null)
+            pointer.SetState(VRPointer.State.SELECT);
+
+        currentIntractable = interactiveObject;
+        UnityPointerSelect(currentIntractable.gameObject);
+        UnityPointerEnter(currentIntractable.gameObject);
+        currentIntractable.AutoClickProgress(GetAutoClickTimeDelta);
+        currentIntractable.PointerEnter();
         if (!isAutoClick)
        yield return ClickInput();
         else
@@ -29,12 +48,12 @@ public class Gaze : VREventSystem {
 
     IEnumerator ClickInput() {
         yield return new WaitUntil(() => isClick == true);
+        if (pointer != null)
+            pointer.SetState(VRPointer.State.CLICK);
 
-        pointer.SetState(VRPointer.State.CLICK);
-
-        UnityPointerClick(currentInteractable.gameObject);
-        currentInteractable.PointerClick();
-        UnityPointerDeselect(currentInteractable.gameObject);
+        UnityPointerClick(currentIntractable.gameObject);
+        currentIntractable.PointerClick();
+        UnityPointerDeselect(currentIntractable.gameObject);
         isClick = false;
         Invoke("Deselect", 0.5f);
         yield return 0;
@@ -48,14 +67,14 @@ public class Gaze : VREventSystem {
 
         autoClickTimeDelta = autoClickTimeDelta + Time.deltaTime;
 
-        currentInteractable.AutoClickProgress(autoClickTimeDelta);
+        currentIntractable.AutoClickProgress(autoClickTimeDelta);
         yield return new WaitForSeconds(time);
+        if (pointer != null)
+            pointer.SetState(VRPointer.State.CLICK);
 
-        pointer.SetState(VRPointer.State.CLICK);
-
-        UnityPointerClick(currentInteractable.gameObject);
-        currentInteractable.PointerClick();
-        UnityPointerDeselect(currentInteractable.gameObject);
+        UnityPointerClick(currentIntractable.gameObject);
+        currentIntractable.PointerClick();
+        UnityPointerDeselect(currentIntractable.gameObject);
         isClick = false;
         Invoke("Deselect", 0.5f);
         yield return 0;
@@ -63,7 +82,8 @@ public class Gaze : VREventSystem {
 
     public override IEnumerator StartDeselect()
     {
-        pointer.SetState(VRPointer.State.IDLE);
+        if (pointer != null)
+            pointer.SetState(VRPointer.State.IDLE);
         return base.StartDeselect();
 
     }
@@ -76,6 +96,7 @@ public class Gaze : VREventSystem {
 
         if (pointer == null)
             return;
+
         if (hit.transform !=null)
             pointer.SetPointerPosition(ray.GetPoint(hit.distance - (hit.distance/100)));
         else

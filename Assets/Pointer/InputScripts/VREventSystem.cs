@@ -3,15 +3,19 @@ using System.Collections;
 
 public class VREventSystem : VRPointerEvents {
 
-    protected VRInteractable currentInteractable;
+    protected VRInteractable currentIntractable;
     private VRInteractable currentSelectedInteractable;
+
+    
+    public bool isVerbose;
 
     protected Ray ray;
     protected RaycastHit hit = new RaycastHit();
+    [SerializeField]
     private float maxDistance = 100;
 
-    private Coroutine selectCoroutine ;
-    private Coroutine AutoClickCoroutine;
+    private IEnumerator selectCoroutine ;
+    private IEnumerator AutoClickCoroutine;
 
    protected float autoClickTimeDelta = 0;
     public float GetAutoClickTimeDelta
@@ -34,10 +38,14 @@ public class VREventSystem : VRPointerEvents {
 
         if (Physics.Raycast(ray, out hit, maxDistance))
         {
+           
+
             VRInteractable interactable = hit.transform.GetComponent<VRInteractable>();
 
-            if(interactable != null)
+            if (interactable != null)
                 Select(interactable);
+          
+
             
 
         }
@@ -51,42 +59,73 @@ public class VREventSystem : VRPointerEvents {
 
     public  void Select(VRInteractable interactiveObject)
     {
+        
+
         currentSelectedInteractable = interactiveObject;
-        if (currentSelectedInteractable == currentInteractable)
+
+        if (currentSelectedInteractable == currentIntractable) {
+
             return;
+        }
+
+        
 
         if (selectCoroutine == null)
         {
+            if (isVerbose)
+                Debug.Log("start selection...");
+            selectCoroutine = StartSelect(interactiveObject);
+             StartCoroutine(selectCoroutine);
            
-            selectCoroutine = StartCoroutine(StartSelect(interactiveObject));
         }
         else {
-            StopCoroutine(selectCoroutine);
+            if (isVerbose)
+                Debug.Log("new selection started before last finished. \n stopping selection.");
+                StopCoroutine(selectCoroutine);
+
+            if (isVerbose)
+                Debug.Log("new selection started before last finished. \n deselecting object.");
             Deselect();
-            currentInteractable = interactiveObject;
-            selectCoroutine = StartCoroutine(StartSelect(interactiveObject));
+            if (isVerbose)
+                Debug.Log("starting new selection.");
+            currentIntractable = interactiveObject;
+            selectCoroutine = StartSelect(interactiveObject);
+          StartCoroutine(selectCoroutine);
 
         }
         
     }
 
     public virtual IEnumerator StartSelect(VRInteractable interactiveObject) {
-        UnityPointerSelect(currentInteractable.gameObject);
-        UnityPointerEnter(currentInteractable.gameObject);
-        currentInteractable = interactiveObject;
+
+
+        if (isVerbose)
+            Debug.Log("pointer Selected and entered object. \n current intractable set.");
+        UnityPointerSelect(currentIntractable.gameObject);
+        UnityPointerEnter(currentIntractable.gameObject);
+        currentIntractable = interactiveObject;
         interactiveObject.PointerEnter();
+
+
         yield return 0;
     }
 
     public virtual IEnumerator StartDeselect()
     {
-        if (currentInteractable)
+
+        if (currentIntractable)
         {
-            UnityPointerDeselect(currentInteractable.gameObject);
-            UnityPointerExit(currentInteractable.gameObject);
-            currentInteractable.PointerExit();
-            currentInteractable = null;
+            UnityPointerDeselect(currentIntractable.gameObject);
+            UnityPointerExit(currentIntractable.gameObject);
+            currentIntractable.PointerExit();
+            currentIntractable = null;
+
+            selectCoroutine = null;
+            AutoClickCoroutine = null;
+            if (isVerbose)
+                Debug.Log("pointer Deselected and exited.  \n current intractable set to null.");
         }
+      
 
         yield return 0;
     }
@@ -100,9 +139,16 @@ public class VREventSystem : VRPointerEvents {
     {
         if (AutoClickCoroutine != null)
         {
+            if (isVerbose)
+                Debug.Log("new auto click started before last finished \n stopping auto click.");
+
             StopCoroutine(AutoClickCoroutine);
         }
-        AutoClickCoroutine = StartCoroutine(AutoClickAction(time));
+
+        AutoClickCoroutine =AutoClickAction(time);
+       StartCoroutine(AutoClickCoroutine);
+        if (isVerbose)
+            Debug.Log("starting new auto click.");
 
     }
 
@@ -111,12 +157,16 @@ public class VREventSystem : VRPointerEvents {
     public virtual IEnumerator AutoClickAction(float time = 0)
     {
         autoClickTimeDelta = 0;
-         yield return new WaitForEndOfFrame();
+        
+        yield return new WaitForEndOfFrame();
+        if (isVerbose)
+            Debug.Log("autoclick Current time:" + autoClickTimeDelta);
 
         autoClickTimeDelta = autoClickTimeDelta + Time.deltaTime;
         Debug.Log(autoClickTimeDelta);
         yield return new WaitForSeconds(time);
-        Debug.Log("Clicked");
+        if (isVerbose)
+            Debug.Log("Auto Clicked!");
         autoClickTimeDelta = 0;
         yield return 0;
     }
