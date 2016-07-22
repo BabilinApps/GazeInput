@@ -30,6 +30,6 @@ public class VRInteractable : MonoBehaviour {
 
     public void AutoClickProgress(float progress)
     {
-
+       
     }
 }

@@ -2,47 +2,58 @@
 using System.Collections;
 using UnityEngine.EventSystems;
 
-public class VRPointerEvents : MonoBehaviour {
+namespace BabilinApps.VRInput
+{
 
-    private PointerEventData currentEventData;
-
-  
-
-    // Use this for initialization
-    protected void SetPointerEvents()
+    /// <summary>
+    /// links VRInput events to Unity events
+    /// </summary>
+    public class VRPointerEvents : MonoBehaviour
     {
-        currentEventData = new PointerEventData(EventSystem.current);
+        //Unity UI pointer data 
+        private PointerEventData currentEventData;
 
-    }
 
 
-    protected void UnityPointerEnter(GameObject activeItem)
-    {
-        if (currentEventData != null)
-             ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerEnterHandler);
-    }
+        // Use this for initialization
+        protected void SetPointerEvents()
+        {
+            currentEventData = new PointerEventData(EventSystem.current);
 
-    protected void UnityPointerSelect(GameObject activeItem)
-    {
-        if (currentEventData != null)
-            ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.selectHandler);
-    }
+            if (currentEventData == null)
+                Debug.LogWarning("There is no  Unity UI Event System in the scene");
 
-    protected void UnityPointerDeselect(GameObject activeItem)
-    {
-        if (currentEventData != null)
-            ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.deselectHandler);
-    }
+        }
 
-    protected void UnityPointerExit(GameObject activeItem)
-    {
-        if (currentEventData != null)
-            ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerExitHandler);
-    }
 
-    protected void UnityPointerClick(GameObject activeItem)
-    {
-        if (currentEventData != null)
-            ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerClickHandler);
+        protected void UnityPointerEnter(GameObject activeItem)
+        {
+            if (currentEventData != null)
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerEnterHandler);
+        }
+
+        protected void UnityPointerSelect(GameObject activeItem)
+        {
+            if (currentEventData != null)
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.selectHandler);
+        }
+
+        protected void UnityPointerDeselect(GameObject activeItem)
+        {
+            if (currentEventData != null)
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.deselectHandler);
+        }
+
+        protected void UnityPointerExit(GameObject activeItem)
+        {
+            if (currentEventData != null)
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerExitHandler);
+        }
+
+        protected void UnityPointerClick(GameObject activeItem)
+        {
+            if (currentEventData != null)
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerClickHandler);
+        }
     }
 }
