@@ -4,8 +4,8 @@ namespace BabilinApps.VRInput.Controller
 {
     public class Gaze : VREventSystem
     {
-        [SerializeField]
-        bool isClick, isAutoClick, isRepeatable = false;
+        
+        public bool isClick, isAutoClick, isRepeatable = false;
         [SerializeField]
         VRPointer pointer;
         [SerializeField]
