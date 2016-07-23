@@ -80,7 +80,7 @@ namespace BabilinApps.VRInput.Controller
         public override IEnumerator AutoClickAction(float time = 0)
         {
             if (isVerbose)
-                Debug.Log(string.Format("waiting [0] seconds", time));
+                Debug.Log(string.Format("waiting [0] seconds", time.ToString()));
 
             yield return new WaitUntil(() => GetAutoClickTimeDelta >= time);
 
