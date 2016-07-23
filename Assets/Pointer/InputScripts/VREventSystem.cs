@@ -9,7 +9,7 @@ namespace BabilinApps.VRInput
         private VRInteractable currentSelectedInteractable;
 
         [Tooltip("Use this to see exactly what is happining inside of the VR Input System")]
-        public bool isVerbose;
+        public bool isVerbose, isNotNormalizedFillValue = false;
 
      
 
@@ -131,7 +131,9 @@ namespace BabilinApps.VRInput
 
                 if (currentIntractable == null)
                     yield break;
-
+                if(!isNotNormalizedFillValue)
+                currentIntractable.AutoClickProgress(autoClickTimeDelta/time);
+                else
                 currentIntractable.AutoClickProgress(autoClickTimeDelta);
 
                 yield return 0;
