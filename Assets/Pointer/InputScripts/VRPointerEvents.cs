@@ -47,13 +47,19 @@ namespace BabilinApps.VRInput
         protected void UnityPointerExit(GameObject activeItem)
         {
             if (currentEventData != null)
+            {
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerUpHandler);
                 ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerExitHandler);
+            }
         }
 
         protected void UnityPointerClick(GameObject activeItem)
         {
             if (currentEventData != null)
+            {
+                ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerDownHandler);
                 ExecuteEvents.Execute(activeItem, currentEventData, ExecuteEvents.pointerClickHandler);
+            }
         }
     }
 }
