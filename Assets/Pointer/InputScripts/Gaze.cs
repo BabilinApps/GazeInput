@@ -137,5 +137,15 @@ namespace BabilinApps.VRInput.Controller
                 pointer.SetPointerPosition(GazeRay.GetPoint(.5f));
 
         }
+
+
+        void OnDrawGizmos()
+        {
+            Gizmos.color = Color.cyan;
+            if (GazeHit.point != Vector3.zero)
+                Gizmos.DrawLine(transform.position, GazeHit.point);
+        }
     }
+
+
 }

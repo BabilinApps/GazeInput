@@ -197,12 +197,6 @@ namespace BabilinApps.VRInput
             yield return 0;
         }
 
-        void OnDrawGizmos()
-        {
-            Gizmos.color = Color.cyan;
-            if (hit.point != Vector3.zero)
-                Gizmos.DrawLine(transform.position, hit.point);
-        }
 
 
     }
