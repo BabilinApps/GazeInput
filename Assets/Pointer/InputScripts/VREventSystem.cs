@@ -38,7 +38,7 @@ namespace BabilinApps.VRInput
         // Update is called once per frame
         public void GazeUpdate()
         {
-            ray = new Ray(transform.position, Vector3.forward);
+            ray = new Ray(transform.position, transform.forward);
 
             if (Physics.Raycast(ray, out hit, maxDistance))
             {
