@@ -11,10 +11,7 @@ namespace BabilinApps.VRInput
         [Tooltip("Use this to see exactly what is happining inside of the VR Input System")]
         public bool isVerbose;
 
-        protected Ray ray;
-        protected RaycastHit hit = new RaycastHit();
-        [SerializeField]
-        private float maxDistance = 100;
+     
 
         private IEnumerator selectCoroutine;
         private IEnumerator AutoClickCoroutine;
@@ -35,25 +32,7 @@ namespace BabilinApps.VRInput
             SetPointerEvents();
         }
 
-        // Update is called once per frame
-        public void GazeUpdate()
-        {
-            ray = new Ray(transform.position, transform.forward);
-
-            if (Physics.Raycast(ray, out hit, maxDistance))
-            {
-                VRInteractable interactable = hit.transform.GetComponent<VRInteractable>();
-
-                if (interactable != null)
-                    Select(interactable);
-
-            }
-            else
-            {
-                Deselect();
-            }
-
-        }
+   
 
         public void Select(VRInteractable interactiveObject)
         {

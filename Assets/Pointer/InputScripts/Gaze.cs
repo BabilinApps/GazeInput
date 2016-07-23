@@ -12,6 +12,12 @@ namespace BabilinApps.VRInput.Controller
         float autoClickWaitTime = 2;
         [SerializeField]
         float waitForDeselect = .5f;
+
+        private Ray GazeRay;
+        private RaycastHit GazeHit = new RaycastHit();
+        [SerializeField]
+        private float maxDistance = 100;
+
         void Start()
         {
             if (pointer == null)
@@ -106,15 +112,29 @@ namespace BabilinApps.VRInput.Controller
         void Update()
         {
 
-            GazeUpdate();
+            GazeRay = new Ray(transform.position, transform.forward);
+
+            if (Physics.Raycast(GazeRay, out GazeHit, maxDistance))
+            {
+                VRInteractable interactable = GazeHit.transform.GetComponent<VRInteractable>();
+
+                if (interactable != null)
+                    Select(interactable);
+
+            }
+            else
+            {
+                Deselect();
+            }
+
 
             if (pointer == null)
                 return;
 
-            if (hit.transform != null)
-                pointer.SetPointerPosition(ray.GetPoint(hit.distance - (hit.distance / 100)));
+            if (GazeHit.transform != null)
+                pointer.SetPointerPosition(GazeRay.GetPoint(GazeHit.distance - (GazeHit.distance / 100)));
             else
-                pointer.SetPointerPosition(ray.GetPoint(.5f));
+                pointer.SetPointerPosition(GazeRay.GetPoint(.5f));
 
         }
     }
