@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 namespace BabilinApps.VRInput.Controller
 {
     public class Gaze : VREventSystem
@@ -13,8 +15,9 @@ namespace BabilinApps.VRInput.Controller
         [SerializeField]
         float waitForDeselect = .5f;
 
-        private Ray GazeRay;
-        private RaycastHit GazeHit = new RaycastHit();
+        private Ray gazeRay;
+        private GameObject mouseGazeHit;
+        private RaycastHit objectGazeHit = new RaycastHit();
         [SerializeField]
         private float maxDistance = 100;
 
@@ -80,7 +83,7 @@ namespace BabilinApps.VRInput.Controller
         public override IEnumerator AutoClickAction(float time = 0)
         {
             if (isVerbose)
-                Debug.Log(string.Format("waiting [0] seconds", time.ToString()));
+                Debug.Log(string.Format("waiting {0} seconds", time.ToString()));
 
             yield return new WaitUntil(() => GetAutoClickTimeDelta >= time);
 
@@ -109,41 +112,70 @@ namespace BabilinApps.VRInput.Controller
 
 
         // Update is called once per frame
-        void Update()
+        void LateUpdate()
         {
+            gazeRay = new Ray(transform.position, transform.forward);
+            if (Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {
+                ObjectRaycast();
+            }
+            else if (RaycastMouse(Camera.main.WorldToScreenPoint(pointer.transform.position), out mouseGazeHit)) {
+                MouseRaycast();
+            }
+            else {
+                Deselect();
+            }
+            UpdatePointer();
 
-            GazeRay = new Ray(transform.position, transform.forward);
 
-            if (Physics.Raycast(GazeRay, out GazeHit, maxDistance))
-            {
-                VRInteractable interactable = GazeHit.transform.GetComponent<VRInteractable>();
 
+
+        }
+
+        void MouseRaycast() {
+            
+
+           
+                VRInteractable interactable = mouseGazeHit.GetComponent<VRInteractable>();
                 if (interactable != null)
                     Select(interactable);
 
-            }
-            else
-            {
-                Deselect();
-            }
+            
+        
 
+       
+        
+    }
+
+        void UpdatePointer() {
 
             if (pointer == null)
                 return;
 
-            if (GazeHit.transform != null)
-                pointer.SetPointerPosition(GazeRay.GetPoint(GazeHit.distance - (GazeHit.distance / 100)));
+            if (objectGazeHit.transform != null)
+                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance - ( objectGazeHit.distance / 100 )));
             else
-                pointer.SetPointerPosition(GazeRay.GetPoint(.5f));
+                pointer.SetPointerPosition(gazeRay.GetPoint(.5f));
+        }
+
+        void ObjectRaycast() {
+
+
+            VRInteractable interactable = objectGazeHit.transform.GetComponent<VRInteractable>();
+
+                if (interactable != null)
+                    Select(interactable);
+
+          
 
         }
+
 
 
         void OnDrawGizmos()
         {
             Gizmos.color = Color.cyan;
-            if (GazeHit.point != Vector3.zero)
-                Gizmos.DrawLine(transform.position, GazeHit.point);
+            if (objectGazeHit.point != Vector3.zero)
+                Gizmos.DrawLine(transform.position, objectGazeHit.point);
         }
     }
 

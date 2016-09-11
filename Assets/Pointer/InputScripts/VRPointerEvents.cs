@@ -11,7 +11,7 @@ namespace BabilinApps.VRInput
     public class VRPointerEvents : MonoBehaviour
     {
         //Unity UI pointer data 
-        private PointerEventData currentEventData;
+        protected PointerEventData currentEventData;
 
 
 
@@ -19,7 +19,7 @@ namespace BabilinApps.VRInput
         protected void SetPointerEvents()
         {
             currentEventData = new PointerEventData(EventSystem.current);
-
+            
             if (currentEventData == null)
                 Debug.LogWarning("There is no  Unity UI Event System in the scene");
 

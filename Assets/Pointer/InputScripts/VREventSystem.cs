@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.EventSystems;
+
 namespace BabilinApps.VRInput
 {
-    public class VREventSystem : VRPointerEvents
-    {
+    public class VREventSystem : VRPointerEvents {
 
         protected VRInteractable currentIntractable;
         private VRInteractable currentSelectedInteractable;
@@ -11,14 +13,13 @@ namespace BabilinApps.VRInput
         [Tooltip("Use this to see exactly what is happining inside of the VR Input System")]
         public bool isVerbose, isNotNormalizedFillValue = false;
 
-     
+
 
         private IEnumerator selectCoroutine;
         private IEnumerator AutoClickCoroutine;
 
         protected float autoClickTimeDelta = 0;
-        public float GetAutoClickTimeDelta
-        {
+        public float GetAutoClickTimeDelta {
             get
             {
                 return autoClickTimeDelta;
@@ -26,34 +27,104 @@ namespace BabilinApps.VRInput
             }
         }
         // Use this for initialization
-        void Awake()
-        {
+        void Awake() {
 
             SetPointerEvents();
+            pointer = new PointerEventData(EventSystem.current);
         }
 
-   
+        private static PointerEventData pointer = new PointerEventData(EventSystem.current);
+        private static List<VRInteractable> resultList = new List<VRInteractable> ();
+        private static List<VRInteractable> newResultList = new List<VRInteractable>();
+        private static GameObject LastSelected;
+        private static Vector2  lastLocation;
+        public static bool RaycastMouse(Vector2 Location, out GameObject hit) {
+
+             List<RaycastResult> raycastResultCache = new List<RaycastResult>();
+
+         
+            if (lastLocation == Location && LastSelected != null) {
+                hit = LastSelected;
+                return true;
+            }
+            else {
+
+                lastLocation = Location;
+            }
+
+            pointer.position = lastLocation;
+          
+            EventSystem.current.RaycastAll(pointer, raycastResultCache);
+
+            foreach (RaycastResult result in raycastResultCache) {
+                VRInteractable item = result.gameObject.GetComponent<VRInteractable>();
+                if (item !=null)
+                    newResultList.Add(item);
+            }
+            if (newResultList.Count <= 0) {
+                Debug.Log("no objects selected");
+                LastSelected = null;
+                hit = LastSelected;
+                return false;
+            }
+              
+
+            newResultList.Sort(delegate (VRInteractable c1, VRInteractable c2) {
+                Vector2 offset = pointer.position - new Vector2(c1.transform.position.x, c1.transform.position.y);
+                Vector2 offset2 = pointer.position - new Vector2(c2.transform.position.x, c2.transform.position.y);
+                return offset.sqrMagnitude.CompareTo(offset2.sqrMagnitude);
+            }
+            );
+
+
+            if (resultList.Count > 0) {
+                if (resultList[0].transform != newResultList[0].transform)
+                    resultList = newResultList;
+                LastSelected = resultList[0].gameObject;
+                hit = LastSelected;
+                newResultList.Clear();
+                return true;
+            }
+            else if (newResultList.Count > 0) {
+                resultList = newResultList;
+                LastSelected = resultList[0].gameObject;
+                hit = LastSelected;
+                return true;
+            }
+            else {
+                hit = null;
+                return false;
+            }
+        }
+
+        //2 lists with foreach
 
         public void Select(VRInteractable interactiveObject)
         {
-
-
+    
+          
             currentSelectedInteractable = interactiveObject;
-
-            if (currentSelectedInteractable == currentIntractable)
-            {
-
+            if (currentSelectedInteractable == null) 
                 return;
+            
+          if (currentIntractable != null) {
+                if (currentSelectedInteractable == currentIntractable || currentSelectedInteractable.gameObject== currentIntractable.gameObject)
+                    return;
+            
+               
             }
+       
 
 
 
-            if (selectCoroutine == null)
+                if (selectCoroutine == null)
             {
                 if (isVerbose)
                     Debug.Log("start selection...");
+                Debug.Log(( selectCoroutine == null ));
                 selectCoroutine = StartSelect(interactiveObject);
                 StartCoroutine(selectCoroutine);
+                return;
 
             }
             else
@@ -113,6 +184,9 @@ namespace BabilinApps.VRInput
         /// </summary>
         public void ExecuteClick()
         {
+            if (currentIntractable == null || currentIntractable.gameObject == null)
+                return;
+
             if (isVerbose)
                 Debug.Log("execute basic click");
 
@@ -168,12 +242,13 @@ namespace BabilinApps.VRInput
             if (isVerbose)
                 Debug.Log("pointer Selected and entered object. \n current intractable set.");
 
-
+            
+           
             UnityPointerSelect(currentIntractable.gameObject);
             UnityPointerEnter(currentIntractable.gameObject);
-            currentIntractable = interactiveObject;
+         
             interactiveObject.PointerEnter();
-
+            currentIntractable = interactiveObject;
 
             yield return 0;
         }
