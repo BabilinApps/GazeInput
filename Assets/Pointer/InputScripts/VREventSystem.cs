@@ -11,8 +11,10 @@ namespace BabilinApps.VRInput
         private VRInteractable currentSelectedInteractable;
 
         [Tooltip("Use this to see exactly what is happining inside of the VR Input System")]
-        public bool isVerbose, isNotNormalizedFillValue = false;
-
+        public bool isVerbose = false;
+        [Tooltip ("Normalizes the fill value")]
+        [SerializeField]
+        bool isNormalizedFillValue = true;
 
 
         private IEnumerator selectCoroutine;
@@ -41,18 +43,11 @@ namespace BabilinApps.VRInput
         public static bool RaycastMouse(Vector2 Location, out GameObject hit) {
 
              List<RaycastResult> raycastResultCache = new List<RaycastResult>();
-
+           
          
-            if (lastLocation == Location && LastSelected != null) {
-                hit = LastSelected;
-                return true;
-            }
-            else {
+          
 
-                lastLocation = Location;
-            }
-
-            pointer.position = lastLocation;
+            pointer.position = Location;
           
             EventSystem.current.RaycastAll(pointer, raycastResultCache);
 
@@ -62,7 +57,7 @@ namespace BabilinApps.VRInput
                     newResultList.Add(item);
             }
             if (newResultList.Count <= 0) {
-                Debug.Log("no objects selected");
+             
                 LastSelected = null;
                 hit = LastSelected;
                 return false;
@@ -205,7 +200,7 @@ namespace BabilinApps.VRInput
 
                 if (currentIntractable == null)
                     yield break;
-                if(!isNotNormalizedFillValue)
+                if(isNormalizedFillValue)
                 currentIntractable.AutoClickProgress(autoClickTimeDelta/time);
                 else
                 currentIntractable.AutoClickProgress(autoClickTimeDelta);

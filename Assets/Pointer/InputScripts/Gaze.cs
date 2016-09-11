@@ -9,11 +9,23 @@ namespace BabilinApps.VRInput.Controller
         
         public bool isClick, isAutoClick, isRepeatable = false;
         [SerializeField]
+        bool UseOnlyColliderRaycast = true;
+        [SerializeField]
         VRPointer pointer;
+
+        private Vector2 pointerScreenPosition { get
+            {
+                Vector2 pos = Camera.main.WorldToScreenPoint(pointer.transform.position);
+                return new Vector2(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y));
+
+            }
+
+        }
         [SerializeField]
         float autoClickWaitTime = 2;
         [SerializeField]
         float waitForDeselect = .5f;
+       
 
         private Ray gazeRay;
         private GameObject mouseGazeHit;
@@ -110,19 +122,57 @@ namespace BabilinApps.VRInput.Controller
 
         }
 
+        void CameraMovement() {
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+                Camera.main.transform.Translate(transform.up / 4);
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+                Camera.main.transform.Translate(-transform.up / 4);
+
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+                Camera.main.transform.Translate(transform.right / 4);
+
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+                Camera.main.transform.Translate(-transform.right / 4);
+        }
+
 
         // Update is called once per frame
         void LateUpdate()
         {
+            if (Input.GetButton("Cancel") && !UseOnlyColliderRaycast) {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                return;
+            }
+            else if(!UseOnlyColliderRaycast)
+                Cursor.lockState = CursorLockMode.Locked;
+
+            CameraMovement();
+            Input.mousePosition.Set(pointerScreenPosition.x-50, pointerScreenPosition.y - 80, 0);
             gazeRay = new Ray(transform.position, transform.forward);
-            if (Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {
+            if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {
+            
+                
                 ObjectRaycast();
             }
-            else if (RaycastMouse(Camera.main.WorldToScreenPoint(pointer.transform.position), out mouseGazeHit)) {
+            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && RaycastMouse(Input.mousePosition, out mouseGazeHit)) {
+
+                Cursor.lockState = CursorLockMode.Locked;
                 MouseRaycast();
             }
             else {
-                Deselect();
+                if (EventSystem.current.firstSelectedGameObject) {
+                    VRInteractable interactable = EventSystem.current.firstSelectedGameObject.GetComponent<VRInteractable>();
+                    if (interactable != null)
+                        Select(interactable);
+                    else
+                        Deselect();
+                }
+                else 
+                    Deselect();
+                
+               
             }
             UpdatePointer();
 
@@ -132,18 +182,9 @@ namespace BabilinApps.VRInput.Controller
         }
 
         void MouseRaycast() {
-            
-
-           
                 VRInteractable interactable = mouseGazeHit.GetComponent<VRInteractable>();
                 if (interactable != null)
                     Select(interactable);
-
-            
-        
-
-       
-        
     }
 
         void UpdatePointer() {
@@ -164,9 +205,6 @@ namespace BabilinApps.VRInput.Controller
 
                 if (interactable != null)
                     Select(interactable);
-
-          
-
         }
 
 
