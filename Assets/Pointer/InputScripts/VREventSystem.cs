@@ -16,6 +16,8 @@ namespace BabilinApps.VRInput
         [SerializeField]
         bool isNormalizedFillValue = true;
 
+        [SerializeField]
+      protected  bool UseOnlyColliderRaycast = true;
 
         private IEnumerator selectCoroutine;
         private IEnumerator AutoClickCoroutine;
@@ -42,7 +44,8 @@ namespace BabilinApps.VRInput
         private static Vector2  lastLocation;
         public static bool RaycastMouse(Vector2 Location, out GameObject hit) {
 
-             List<RaycastResult> raycastResultCache = new List<RaycastResult>();
+            Cursor.lockState = CursorLockMode.Locked;
+            List<RaycastResult> raycastResultCache = new List<RaycastResult>();
            
          
           

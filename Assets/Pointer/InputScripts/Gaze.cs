@@ -8,8 +8,7 @@ namespace BabilinApps.VRInput.Controller
     {
         
         public bool isClick, isAutoClick, isRepeatable = false;
-        [SerializeField]
-        bool UseOnlyColliderRaycast = true;
+   
         [SerializeField]
         VRPointer pointer;
 
@@ -151,14 +150,10 @@ namespace BabilinApps.VRInput.Controller
             CameraMovement();
             Input.mousePosition.Set(pointerScreenPosition.x-50, pointerScreenPosition.y - 80, 0);
             gazeRay = new Ray(transform.position, transform.forward);
-            if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {
-            
-                
+            if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {              
                 ObjectRaycast();
             }
             else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && RaycastMouse(Input.mousePosition, out mouseGazeHit)) {
-
-                Cursor.lockState = CursorLockMode.Locked;
                 MouseRaycast();
             }
             else {
