@@ -139,6 +139,7 @@ namespace BabilinApps.VRInput.Controller
         // Update is called once per frame
         void LateUpdate()
         {
+            pointer.transform.LookAt(Camera.main.transform);
             if (Input.GetButton("Cancel") && !UseOnlyColliderRaycast) {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
