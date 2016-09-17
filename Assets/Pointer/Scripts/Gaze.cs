@@ -4,11 +4,12 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 namespace BabilinApps.VRInput.Controller
 {
+
     public class Gaze : VREventSystem
     {
         
-        public bool isClick, isAutoClick, isRepeatable = false;
-   
+        public bool isAutoClick, isRepeatable = false;
+        private bool isClick = false;
         [SerializeField]
         VRPointer pointer;
 
@@ -70,7 +71,7 @@ namespace BabilinApps.VRInput.Controller
 
         }
 
-        IEnumerator ClickInput()
+        public virtual IEnumerator ClickInput()
         {
             yield return new WaitUntil(() => isClick == true);
             if (isVerbose)
@@ -139,37 +140,31 @@ namespace BabilinApps.VRInput.Controller
         // Update is called once per frame
         void LateUpdate()
         {
+
+            CameraMovement();
+
             pointer.transform.LookAt(Camera.main.transform);
-            if (Input.GetButton("Cancel") && !UseOnlyColliderRaycast) {
+            if (Input.GetButton("Cancel")) {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 return;
             }
-            else if(!UseOnlyColliderRaycast)
-                Cursor.lockState = CursorLockMode.Locked;
+           
 
-            CameraMovement();
+     
             Input.mousePosition.Set(pointerScreenPosition.x-50, pointerScreenPosition.y - 80, 0);
             gazeRay = new Ray(transform.position, transform.forward);
-            if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance)) {              
+            if (Physics.Raycast(gazeRay, out objectGazeHit, maxDistance) && objectGazeHit.transform.GetComponent<VRInteractable>()) {
                 ObjectRaycast();
             }
-            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && RaycastMouse(Input.mousePosition, out mouseGazeHit)) {
+
+            else if (!UseOnlyColliderRaycast && RaycastMouse(Input.mousePosition, out mouseGazeHit)) {
                 MouseRaycast();
             }
             else {
-                if (EventSystem.current.firstSelectedGameObject) {
-                    VRInteractable interactable = EventSystem.current.firstSelectedGameObject.GetComponent<VRInteractable>();
-                    if (interactable != null)
-                        Select(interactable);
-                    else
-                        Deselect();
-                }
-                else 
-                    Deselect();
-                
-               
+                Deselect();
             }
+            
             UpdatePointer();
 
 
@@ -189,9 +184,9 @@ namespace BabilinApps.VRInput.Controller
                 return;
 
             if (objectGazeHit.transform != null)
-                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance - ( objectGazeHit.distance / 100 )));
-            else
-                pointer.SetPointerPosition(gazeRay.GetPoint(.5f));
+                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance) + pointer.transform.forward * 2);
+           else
+            pointer.SetPointerPosition(gazeRay.GetPoint(.5f));
         }
 
         void ObjectRaycast() {
@@ -199,8 +194,10 @@ namespace BabilinApps.VRInput.Controller
 
             VRInteractable interactable = objectGazeHit.transform.GetComponent<VRInteractable>();
 
-                if (interactable != null)
-                    Select(interactable);
+            if (interactable != null)
+                Select(interactable);
+            else
+                Deselect();
         }
 
 

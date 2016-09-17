@@ -15,7 +15,7 @@ namespace BabilinApps.VRInput
 
 
 
-        // Use this for initialization
+       
         protected void SetPointerEvents()
         {
             currentEventData = new PointerEventData(EventSystem.current);

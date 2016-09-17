@@ -43,6 +43,10 @@ namespace BabilinApps.VRInput
         private static GameObject LastSelected;
         private static Vector2  lastLocation;
         public static bool RaycastMouse(Vector2 Location, out GameObject hit) {
+            if (Input.GetButton("Cancel")) {
+                hit = null;
+                return false;
+            }
 
             Cursor.lockState = CursorLockMode.Locked;
             List<RaycastResult> raycastResultCache = new List<RaycastResult>();
@@ -147,6 +151,15 @@ namespace BabilinApps.VRInput
 
         public void Deselect()
         {
+            //override input to VR Gaze and try again
+            if (EventSystem.current.firstSelectedGameObject) {
+                VRInteractable interactable = EventSystem.current.firstSelectedGameObject.GetComponent<VRInteractable>();
+                if (interactable != null)
+                    Select(interactable);
+                else
+                    Deselect();
+            }
+
             if (currentIntractable == null)
                 return;
 
