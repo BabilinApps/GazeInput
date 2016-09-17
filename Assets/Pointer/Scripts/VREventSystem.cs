@@ -42,11 +42,14 @@ namespace BabilinApps.VRInput
         private static List<VRInteractable> newResultList = new List<VRInteractable>();
         private static GameObject LastSelected;
         private static Vector2  lastLocation;
+
+        /// <summary>
+        /// selects a UI object from a given point.
+        /// </summary>
+        /// <param name="Location"> the screen point where to select the object</param>
+        /// <param name="hit"> the object that gets selected</param>
+        /// <returns></returns>
         public static bool RaycastMouse(Vector2 Location, out GameObject hit) {
-            if (Input.GetButton("Cancel")) {
-                hit = null;
-                return false;
-            }
 
             Cursor.lockState = CursorLockMode.Locked;
             List<RaycastResult> raycastResultCache = new List<RaycastResult>();
@@ -99,8 +102,10 @@ namespace BabilinApps.VRInput
             }
         }
 
-        //2 lists with foreach
-
+        /// <summary>
+        /// calls the event on a interactive object
+        /// </summary>
+        /// <param name="interactiveObject"> the object to select</param>
         public void Select(VRInteractable interactiveObject)
         {
     
@@ -149,15 +154,17 @@ namespace BabilinApps.VRInput
 
         }
 
+        /// <summary>
+        /// deselects the current object
+        /// </summary>
         public void Deselect()
         {
-            //override input to VR Gaze and try again
             if (EventSystem.current.firstSelectedGameObject) {
                 VRInteractable interactable = EventSystem.current.firstSelectedGameObject.GetComponent<VRInteractable>();
-                if (interactable != null)
+                if (interactable != null) {
                     Select(interactable);
-                else
-                    Deselect();
+                    return;
+                }
             }
 
             if (currentIntractable == null)
@@ -169,6 +176,10 @@ namespace BabilinApps.VRInput
             StartCoroutine(StartDeselect());
         }
 
+        /// <summary>
+        /// Calls for a click on the current interactive object after a given time
+        /// </summary>
+        /// <param name="time"> time to wait before click</param>
         public void AutoClick(float time = 0)
         {
             if (isVerbose)
@@ -206,6 +217,9 @@ namespace BabilinApps.VRInput
             UnityPointerDeselect(currentIntractable.gameObject);
         }
 
+        /// <summary>
+        /// sends the auto click progress to the current interactive object
+        /// </summary>
         private IEnumerator SetAutoClickTime(float time)
         {
        
@@ -226,6 +240,11 @@ namespace BabilinApps.VRInput
 
         }
 
+        /// <summary>
+        /// Started when AutoClick is called
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public virtual IEnumerator AutoClickAction(float time = 0)
         {
             if (isVerbose)
@@ -246,6 +265,9 @@ namespace BabilinApps.VRInput
             yield return 0;
         }
 
+        /// <summary>
+        /// starts when an object is selected or enters the gaze ray
+        /// </summary>
         public virtual IEnumerator StartSelect(VRInteractable interactiveObject)
         {
 
@@ -264,6 +286,9 @@ namespace BabilinApps.VRInput
             yield return 0;
         }
 
+        /// <summary>
+        /// Started when Deselect is called
+        /// </summary>
         public virtual IEnumerator StartDeselect()
         {
 

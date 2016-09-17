@@ -4,39 +4,46 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 namespace BabilinApps.VRInput.Controller
 {
-
     public class Gaze : VREventSystem
     {
-        
-        public bool isAutoClick, isRepeatable = false;
-        private bool isClick = false;
+        //Call this to activate a click without a timer;
+        public bool isClick { get; set; }
+        [Tooltip("Set true to have the pointer click the object after a given amount of time")]
+        [SerializeField]
+        bool isAutoClick = false;
+        [Tooltip("Set true to allow auto click to repeat clicks on the same object even after it has been pressed")]
+        [SerializeField]
+        bool isRepeatable = false;
+        // pointer to use as the cross hair for gaze
         [SerializeField]
         VRPointer pointer;
-
-        private Vector2 pointerScreenPosition { get
-            {
+        //the pointers pixel position on the screen 
+        private Vector2 pointerScreenPosition {
+            get{
                 Vector2 pos = Camera.main.WorldToScreenPoint(pointer.transform.position);
                 return new Vector2(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y));
-
             }
-
         }
+        [Tooltip("The amount of time required for the auto click to activate a press")]
         [SerializeField]
         float autoClickWaitTime = 2;
+        [Tooltip("The amount of time waited before the transition from clicked to deselected")]
         [SerializeField]
-        float waitForDeselect = .5f;
+        float deselectWaitTime = .5f;
        
-
+        //Ray that is used and set by the interactions 
         private Ray gazeRay;
+        //The object that is stored during a selection that does not use colliders
         private GameObject mouseGazeHit;
+        // the raycast hit that is stored during a selection using physics
         private RaycastHit objectGazeHit = new RaycastHit();
+        [Tooltip("The distance at which the gaze pointer can select")]
         [SerializeField]
         private float maxDistance = 100;
 
         void Start()
         {
-            if (pointer == null)
-            {
+            if (pointer == null) {
                 if (isVerbose)
                     Debug.Log("Could not finder pointer...");
 
@@ -48,6 +55,11 @@ namespace BabilinApps.VRInput.Controller
                     Debug.Log("Could not find pointer.");
 
             }
+            else {
+                pointer.transform.SetParent(Camera.main.transform);
+            }
+
+           
         }
 
         public override IEnumerator StartSelect(VRInteractable interactiveObject)
@@ -71,7 +83,10 @@ namespace BabilinApps.VRInput.Controller
 
         }
 
-        public virtual IEnumerator ClickInput()
+        /// <summary>
+        /// Used to press the button when 'isClicked' is set to true
+        /// </summary>
+        IEnumerator ClickInput()
         {
             yield return new WaitUntil(() => isClick == true);
             if (isVerbose)
@@ -83,10 +98,10 @@ namespace BabilinApps.VRInput.Controller
 
             isClick = false;
             if (isVerbose)
-                Debug.Log("Waiting 'waitForDeselect' value [" + waitForDeselect + "] to deselect");
+                Debug.Log("Waiting 'waitForDeselect' value [" + deselectWaitTime + "] to deselect");
 
             if (!isRepeatable)
-                Invoke("Deselect", 0.5f);
+                Invoke("Deselect", deselectWaitTime);
             yield return 0;
         }
 
@@ -122,91 +137,94 @@ namespace BabilinApps.VRInput.Controller
 
         }
 
-        void CameraMovement() {
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-                Camera.main.transform.Translate(transform.up / 4);
 
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-                Camera.main.transform.Translate(-transform.up / 4);
+        /// <summary>
+        /// Users input such as the escape key and the button press that is used without auto click
+        /// </summary>
+        void UserInput() {
+            if (Input.GetMouseButtonDown(0))
+                isClick = true;
 
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-                Camera.main.transform.Translate(transform.right / 4);
-
-            if (Input.GetKeyDown(KeyCode.LeftArrow))
-                Camera.main.transform.Translate(-transform.right / 4);
-        }
-
-
-        // Update is called once per frame
-        void LateUpdate()
-        {
-
-            CameraMovement();
-
-            pointer.transform.LookAt(Camera.main.transform);
-            if (Input.GetButton("Cancel")) {
+            
+            if (Input.GetButton("Cancel") && !UseOnlyColliderRaycast) {
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
                 return;
             }
-           
-
-     
-            Input.mousePosition.Set(pointerScreenPosition.x-50, pointerScreenPosition.y - 80, 0);
-            gazeRay = new Ray(transform.position, transform.forward);
-            if (Physics.Raycast(gazeRay, out objectGazeHit, maxDistance) && objectGazeHit.transform.GetComponent<VRInteractable>()) {
-                ObjectRaycast();
+            else if (!UseOnlyColliderRaycast) {
+                Cursor.lockState = CursorLockMode.Locked;
+                Input.mousePosition.Set(pointerScreenPosition.x - 50, pointerScreenPosition.y - 80, 0);
+            }
             }
 
-            else if (!UseOnlyColliderRaycast && RaycastMouse(Input.mousePosition, out mouseGazeHit)) {
-                MouseRaycast();
-            }
-            else {
-                Deselect();
-            }
-            
+
+        // Update is called once per frame
+        void Update()
+        {
+            UserInput();
             UpdatePointer();
-
-
-
-
+            GazeRaycast();
         }
 
-        void MouseRaycast() {
+        /// <summary>
+        /// The function that casts a physics and mouse ray to select an intractable object
+        /// </summary>
+        void GazeRaycast() {
+            gazeRay = new Ray(transform.position, transform.forward);
+            if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance))
+                ObjectHit();
+
+            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && RaycastMouse(Input.mousePosition, out mouseGazeHit))
+                MouseHit();
+
+            else
+                Deselect();
+        }
+
+        /// <summary>
+        /// called when the mouse ray hits an object
+        /// </summary>
+        void MouseHit() {
                 VRInteractable interactable = mouseGazeHit.GetComponent<VRInteractable>();
                 if (interactable != null)
                     Select(interactable);
     }
 
+        /// <summary>
+        /// Sets the pointer position and rotation
+        /// </summary>
         void UpdatePointer() {
 
             if (pointer == null)
                 return;
-
-            if (objectGazeHit.transform != null)
-                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance) + pointer.transform.forward * 2);
-           else
-            pointer.SetPointerPosition(gazeRay.GetPoint(.5f));
-        }
-
-        void ObjectRaycast() {
-
-
-            VRInteractable interactable = objectGazeHit.transform.GetComponent<VRInteractable>();
-
-            if (interactable != null)
-                Select(interactable);
+            Transform cameraTransform = Camera.main.transform;
+            pointer.transform.LookAt(cameraTransform);
+            if (objectGazeHit.transform != null) {
+                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance) * 1.45f);
+                
+            }
             else
-                Deselect();
+                pointer.SetPointerPosition(Vector3.forward * 3);
+        }
+
+        /// <summary>
+        /// Called when the physics ray hits an object
+        /// </summary>
+        void ObjectHit() {
+            VRInteractable interactable = objectGazeHit.transform.GetComponent<VRInteractable>();
+                if (interactable != null)
+                    Select(interactable);
         }
 
 
-
+        /// <summary>
+        /// draws a ray to the pointer from the gaze object
+        /// </summary>
         void OnDrawGizmos()
         {
             Gizmos.color = Color.cyan;
             if (objectGazeHit.point != Vector3.zero)
-                Gizmos.DrawLine(transform.position, objectGazeHit.point);
+                Gizmos.DrawLine(transform.position, pointer.transform.position);
         }
     }
 
