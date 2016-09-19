@@ -170,7 +170,15 @@ namespace BabilinApps.VRInput.Controller
         /// The function that casts a physics and mouse ray to select an intractable object
         /// </summary>
         void GazeRaycast() {
+
+            // debug with mouse
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) {
+                gazeRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            }
+            else
             gazeRay = new Ray(transform.position, transform.forward);
+
+
             if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance))
                 ObjectHit();
 
