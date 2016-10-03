@@ -35,7 +35,7 @@ namespace BabilinApps.VRInput {
 
         public void SetPointerPosition(Vector3 position) {
 
-
+            if(transform.position != position)
             transform.position = position;
 
             //.10 scales the pointer to a reasonable size

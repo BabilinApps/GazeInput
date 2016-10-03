@@ -17,6 +17,8 @@ namespace BabilinApps.VRInput.Controller
         // pointer to use as the cross hair for gaze
         [SerializeField]
         VRPointer pointer;
+       // Is the gaze pointer selecting something
+        public bool isSelecting { get; private set; }
         //the pointers pixel position on the screen 
         private Vector2 pointerScreenPosition {
             get{
@@ -155,7 +157,15 @@ namespace BabilinApps.VRInput.Controller
                 Cursor.lockState = CursorLockMode.Locked;
                 Input.mousePosition.Set(pointerScreenPosition.x - 50, pointerScreenPosition.y - 80, 0);
             }
+
+
+            // debug with mouse
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) {
+                gazeRay = Camera.main.ScreenPointToRay(Input.mousePosition);
             }
+            else
+                gazeRay = new Ray(transform.position, transform.forward);
+        }
 
 
         // Update is called once per frame
@@ -171,18 +181,11 @@ namespace BabilinApps.VRInput.Controller
         /// </summary>
         void GazeRaycast() {
 
-            // debug with mouse
-            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) {
-                gazeRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-            }
-            else
-            gazeRay = new Ray(transform.position, transform.forward);
-
 
             if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance))
                 ObjectHit();
 
-            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && RaycastMouse(Input.mousePosition, out mouseGazeHit))
+            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && GazeUI.RaycastMouse(Input.mousePosition, out mouseGazeHit))
                 MouseHit();
 
             else
@@ -208,11 +211,13 @@ namespace BabilinApps.VRInput.Controller
             Transform cameraTransform = Camera.main.transform;
             pointer.transform.LookAt(cameraTransform);
             if (objectGazeHit.transform != null) {
-                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance) * 1.45f);
-                
+                pointer.SetPointerPosition(gazeRay.GetPoint(objectGazeHit.distance) *.95f);
+                isSelecting = true;
             }
-            else
-                pointer.SetPointerPosition(Vector3.forward * 3);
+            else if (isSelecting) {
+                pointer.SetPointerPosition(gazeRay.GetPoint(3));
+                isSelecting = false;
+            }
         }
 
         /// <summary>
