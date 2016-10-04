@@ -14,6 +14,8 @@ namespace BabilinApps.VRInput.Controller
         [Tooltip("Set true to allow auto click to repeat clicks on the same object even after it has been pressed")]
         [SerializeField]
         bool isRepeatable = false;
+        [SerializeField]
+        protected bool UseOnlyColliderRaycast = true;
         // pointer to use as the cross hair for gaze
         [SerializeField]
         VRPointer pointer;
@@ -29,9 +31,7 @@ namespace BabilinApps.VRInput.Controller
         [Tooltip("The amount of time required for the auto click to activate a press")]
         [SerializeField]
         float autoClickWaitTime = 2;
-        [Tooltip("The amount of time waited before the transition from clicked to deselected")]
-        [SerializeField]
-        float deselectWaitTime = .5f;
+      
        
         //Ray that is used and set by the interactions 
         private Ray gazeRay;
@@ -103,7 +103,7 @@ namespace BabilinApps.VRInput.Controller
                 Debug.Log("Waiting 'waitForDeselect' value [" + deselectWaitTime + "] to deselect");
 
             if (!isRepeatable)
-                Invoke("Deselect", deselectWaitTime);
+                Deselect();
             yield return 0;
         }
 
@@ -126,8 +126,8 @@ namespace BabilinApps.VRInput.Controller
             isClick = false;
 
 
-            if(isRepeatable)
-            Invoke("Deselect", 0.5f);
+            if (isRepeatable)
+                Deselect();
             yield return 0;
         }
 
@@ -185,7 +185,7 @@ namespace BabilinApps.VRInput.Controller
             if (!Input.GetButton("Cancel") && Physics.Raycast(gazeRay, out objectGazeHit, maxDistance))
                 ObjectHit();
 
-            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && GazeUI.RaycastMouse(Input.mousePosition, out mouseGazeHit))
+            else if (!UseOnlyColliderRaycast && !Input.GetButton("Cancel") && VRInteractions.RaycastMouse(Input.mousePosition, out mouseGazeHit))
                 MouseHit();
 
             else

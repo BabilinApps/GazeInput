@@ -3,8 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 namespace BabilinApps.VRInput {
-    public class GazeUI : MonoBehaviour {
-
+    public partial class VRInteractions : MonoBehaviour {
 
         public static PointerEventData pointer = new PointerEventData(EventSystem.current);
         private static List<VRInteractable> resultList = new List<VRInteractable>();

@@ -5,19 +5,20 @@ using UnityEngine.EventSystems;
 
 namespace BabilinApps.VRInput
 {
-    public class VREventSystem : VRPointerEvents {
+    public abstract class VREventSystem : VRPointerEvents {
 
         protected VRInteractable currentIntractable;
         private VRInteractable currentSelectedInteractable;
 
+        [Tooltip("The amount of time waited before the transition from clicked to deselected")]
+       public float deselectWaitTime = .5f;
         [Tooltip("Use this to see exactly what is happining inside of the VR Input System")]
         public bool isVerbose = false;
         [Tooltip ("Normalizes the fill value")]
         [SerializeField]
         bool isNormalizedFillValue = true;
 
-        [SerializeField]
-      protected  bool UseOnlyColliderRaycast = true;
+      
 
         private IEnumerator selectCoroutine;
         private IEnumerator AutoClickCoroutine;
@@ -34,7 +35,7 @@ namespace BabilinApps.VRInput
         void Awake() {
 
             SetPointerEvents();
-            GazeUI.pointer = new PointerEventData(EventSystem.current);
+            VRInteractions.pointer = new PointerEventData(EventSystem.current);
         }
 
 
@@ -211,13 +212,13 @@ namespace BabilinApps.VRInput
             if (isVerbose)
                 Debug.Log("pointer Selected and entered object. \n current intractable set.");
 
-            
-           
+
+            currentIntractable = interactiveObject;
             UnityPointerSelect(currentIntractable.gameObject);
             UnityPointerEnter(currentIntractable.gameObject);
          
             interactiveObject.PointerEnter();
-            currentIntractable = interactiveObject;
+            
 
             yield return 0;
         }
@@ -227,11 +228,12 @@ namespace BabilinApps.VRInput
         /// </summary>
         public virtual IEnumerator StartDeselect()
         {
+            var ci = currentIntractable;
+            yield return new WaitForSeconds(deselectWaitTime);
 
-
-            UnityPointerDeselect(currentIntractable.gameObject);
-            UnityPointerExit(currentIntractable.gameObject);
-            currentIntractable.PointerExit();
+            UnityPointerDeselect(ci.gameObject);
+            UnityPointerExit(ci.gameObject);
+            ci.PointerExit();
             currentIntractable = null;
 
             selectCoroutine = null;
